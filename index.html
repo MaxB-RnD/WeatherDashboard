@@ -69,7 +69,7 @@
         });
 
         function fetchData() {
-            fetch("http://192.168.0.120/")
+            fetch("/api/weather")  // Fetch data from your backend API
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById("temp").textContent = data.temperature.toFixed(2);
@@ -95,7 +95,7 @@
         }
 
         setInterval(fetchData, 60000);  // Fetch every 60 seconds
-        fetchData();// Initial fetch
+        fetchData();  // Initial fetch
     </script>
 </body>
 
