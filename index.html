@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .data {
+            margin-top: 50px;
+            font-size: 2em;
+        }
+        canvas {
+            max-width: 90%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>ESP8266 Weather Station</h1>
+    <div class="data">
+        <p>Temperature: <span id="temp">--</span> °C</p>
+        <p>Humidity: <span id="hum">--</span> %</p>
+    </div>
+    <canvas id="weatherChart"></canvas>
+
+    <script>
+        let tempData = [];
+        let humData = [];
+        let labels = [];
+
+        const ctx = document.getElementById('weatherChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Temperature (°C)',
+                        data: tempData,
+                        borderColor: 'red',
+                        fill: false,
+                    },
+                    {
+                        label: 'Humidity (%)',
+                        data: humData,
+                        borderColor: 'blue',
+                        fill: false,
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    x: { title: { display: true, text: 'Time' } },
+                    y: { title: { display: true, text: 'Value' } }
+                }
+            }
+        });
+
+        function fetchData() {
+            fetch("http://<ESP_IP_ADDRESS>/")
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("temp").textContent = data.temperature.toFixed(2);
+                    document.getElementById("hum").textContent = data.humidity.toFixed(2);
+
+                    const now = new Date().toLocaleTimeString();
+                    labels.push(now);
+                    tempData.push(data.temperature);
+                    humData.push(data.humidity);
+
+                    if (labels.length > 720) {  // 12 hours of data, assuming 1-minute intervals
+                        labels.shift();
+                        tempData.shift();
+                        humData.shift();
+                    }
+
+                    chart.update();
+                })
+                .catch(err => console.error("Error fetching data:", err));
+        }
+
+        setInterval(fetchData, 60000);  // Fetch every 60 seconds
+        fetchData();  // Initial fetch
+    </script>
+</body>
+</html>
