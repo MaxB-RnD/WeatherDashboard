@@ -4,69 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Max's Bedroom Weather Station</title>
+    <title>Weather Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* General Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: Arial, sans-serif;
-            background-color: #0b3d62;
-            color: #fff;
             text-align: center;
-            padding: 20px;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }
 
-        h1 {
-            margin-bottom: 20px;
-        }
-
-        /* Weather Container */
-        .weather-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-
-        /* Card Styles */
-        .card {
-            background: #1e56a0;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            width: 300px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            text-align: left;
-        }
-
-        .card-header {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .card-value {
-            font-size: 2.5em;
-            font-weight: bold;
-        }
-
-        .card-footer {
-            font-size: 0.9em;
-            color: #dfe6e9;
-        }
-
-        .weather-chart {
-            margin-top: 30px;
-            background: #1e56a0;
-            padding: 20px;
-            border-radius: 10px;
+        .data {
+            margin-top: 50px;
+            font-size: 2em;
         }
 
         canvas {
@@ -74,31 +25,15 @@
             height: auto;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
     <h1>Max's Bedroom Weather Station</h1>
-
-    <!-- Weather Cards -->
-    <div class="weather-container">
-        <div class="card">
-            <div class="card-header">Temperature</div>
-            <div class="card-value"><span id="temp">--</span>°C</div>
-            <div class="card-footer">Current temperature</div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">Humidity</div>
-            <div class="card-value"><span id="hum">--</span>%</div>
-            <div class="card-footer">Current humidity</div>
-        </div>
+    <div class="data">
+        <p>Temperature: <span id="temp">--</span> °C</p>
+        <p>Humidity: <span id="hum">--</span> %</p>
     </div>
-
-    <!-- Weather Chart -->
-    <div class="weather-chart">
-        <canvas id="weatherChart"></canvas>
-    </div>
+    <canvas id="weatherChart"></canvas>
 
     <script>
         let tempData = [];
@@ -114,35 +49,21 @@
                     {
                         label: 'Temperature (°C)',
                         data: tempData,
-                        borderColor: '#e74c3c',
-                        backgroundColor: 'rgba(231, 76, 60, 0.2)',
-                        fill: true,
+                        borderColor: 'red',
+                        fill: false,
                     },
                     {
                         label: 'Humidity (%)',
                         data: humData,
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                        fill: true,
+                        borderColor: 'blue',
+                        fill: false,
                     }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
                 scales: {
-                    x: {
-                        title: { display: true, text: 'Time', color: '#fff' },
-                        ticks: { color: '#fff' },
-                    },
-                    y: {
-                        title: { display: true, text: 'Value', color: '#fff' },
-                        ticks: { color: '#fff' },
-                        grid: { color: '#666' }
-                    }
-                },
-                plugins: {
-                    legend: { labels: { color: '#fff' } }
+                    x: { title: { display: true, text: 'Time' } },
+                    y: { title: { display: true, text: 'Value' } }
                 }
             }
         });
@@ -154,12 +75,15 @@
                     document.getElementById("temp").textContent = data.temperature.toFixed(2);
                     document.getElementById("hum").textContent = data.humidity.toFixed(2);
 
-                    const now = new Date().toLocaleTimeString();
-                    labels.push(now);
+                    const now = new Date();
+                    const formattedTime = now.getHours().toString().padStart(2, '0') + ':' +
+                        now.getMinutes().toString().padStart(2, '0');
+                    labels.push(formattedTime);
+
                     tempData.push(data.temperature);
                     humData.push(data.humidity);
 
-                    if (labels.length > 50) {  // Keep last 50 readings
+                    if (labels.length > 720) {  // 12 hours of data, assuming 1-minute intervals
                         labels.shift();
                         tempData.shift();
                         humData.shift();
@@ -170,7 +94,7 @@
                 .catch(err => console.error("Error fetching data:", err));
         }
 
-        setInterval(fetchData, 30000);  // Fetch every 30 seconds
+        setInterval(fetchData, 60000);  // Fetch every 60 seconds
         fetchData();  // Initial fetch
     </script>
 </body>
