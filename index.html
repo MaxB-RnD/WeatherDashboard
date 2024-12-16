@@ -1,3 +1,4 @@
+// Use python3 -m http.server 8000 to launch website
 <!DOCTYPE html>
 <html lang="en">
 
@@ -69,7 +70,7 @@
         });
 
         function fetchData() {
-            fetch("/api/weather")  // Fetch data from your backend API
+            fetch("http://192.168.0.120/")
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById("temp").textContent = data.temperature.toFixed(2);
