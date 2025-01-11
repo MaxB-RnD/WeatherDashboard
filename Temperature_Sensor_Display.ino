@@ -122,7 +122,6 @@ void loop() {
 
   // Get the Current Hour
   int currentHour = timeClient.getHours();
-  Serial.println(currentHour);
 
   // Check if it is Time to Sleep
   if (currentHour < 8) {  // Sleep at 12 AM for 8 Hours
