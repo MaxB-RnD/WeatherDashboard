@@ -28,8 +28,8 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);  // SDA: D2 (GPIO 4) & SCL: D1 (GPIO 5)
 DHT dht(DHTPIN, DHTTYPE);
 
 // Variables to Store Sensor Data
-int temperature = 0.0;
-int humidity = 0.0;
+float temperature = 0.0;
+float humidity = 0.0;
 
 // CODE THAT RUNS ONCE AT START-UP
 void setup() {
@@ -99,19 +99,19 @@ void sleepMode() {
 void displayData() {
   // Print Information to Serial Monitor
   Serial.print("Temperature: ");
-  Serial.print(temperature);
+  Serial.print(temperature, 1);
   Serial.print("°C, Humidity: ");
-  Serial.print(humidity);
+  Serial.print(humidity, 1);
   Serial.println("%");
 
   // Display on LCD
   lcd.clear();
   lcd.print("Temperature: ");
-  lcd.print(temperature);
+  lcd.print(temperature, 1);
   lcd.print("°C");
   lcd.setCursor(0, 1);
   lcd.print("Humidity: ");
-  lcd.print(humidity);
+  lcd.print(humidity, 1);
   lcd.print("%");
 }
 
@@ -129,8 +129,8 @@ void loop() {
     sleepMode();
   } else {
     // Read Sensor Data
-    temperature = round(dht.readTemperature());
-    humidity = round(dht.readHumidity());
+    temperature = dht.readTemperature();
+    humidity = dht.readHumidity();
 
     // If Data is Successfully Obtained, Print to Serial and LCD
     if (isnan(temperature) || isnan(humidity)) {
