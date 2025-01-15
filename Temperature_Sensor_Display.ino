@@ -73,6 +73,8 @@ void setup() {
 void sleepMode() {
   // Notify Me of Sleep Mode
   Serial.println("Entering Sleep Mode...");
+  lcd.clear();
+  lcd.setCursor(0, 0);
   lcd.print("Sleeping...");
   delay(5000);
 
@@ -92,6 +94,8 @@ void sleepMode() {
   // Wake Chip Up
   Serial.println("Exiting Sleep Mode...");
   setup();
+  lcd.clear();
+  lcd.setCursor(0, 0);
   lcd.print("Waking Up...");
 }
 
@@ -101,7 +105,7 @@ void displayData() {
   Serial.print("Temperature: ");
   Serial.print(temperature, 1);
   Serial.print("°C, Humidity: ");
-  Serial.print(humidity, 1);
+  Serial.print(humidity, 2);
   Serial.println("%");
 
   // Display on LCD
@@ -112,7 +116,7 @@ void displayData() {
   lcd.setCursor(5, 1);
   lcd.print(temperature, 1);
   lcd.print("°C");
-  delay(2000);
+  delay(20000);
 
   // Display Humidity for 20 seconds
   lcd.clear();
@@ -121,7 +125,7 @@ void displayData() {
   lcd.setCursor(5, 1);
   lcd.print(humidity, 2);
   lcd.print("%");
-  delay(2000);
+  delay(20000);
 
   // Display Temperature for 20 seconds
   lcd.clear();
@@ -130,7 +134,7 @@ void displayData() {
   lcd.setCursor(5, 1);
   lcd.print(temperature, 1);
   lcd.print("°C");
-  delay(2000);
+  delay(20000);
 }
 
 // CODE THAT RUNS REPEATEDLY EACH CYCLE
