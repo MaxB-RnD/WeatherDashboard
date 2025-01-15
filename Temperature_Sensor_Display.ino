@@ -105,14 +105,32 @@ void displayData() {
   Serial.println("%");
 
   // Display on LCD
+  // Display Temperature for 20 seconds
   lcd.clear();
-  lcd.print("Temperature: ");
+  lcd.setCursor(1, 0);
+  lcd.print("-TEMPERATURE-");
+  lcd.setCursor(5, 1);
   lcd.print(temperature, 1);
   lcd.print("°C");
-  lcd.setCursor(0, 1);
-  lcd.print("Humidity: ");
-  lcd.print(humidity, 1);
+  delay(2000);
+
+  // Display Humidity for 20 seconds
+  lcd.clear();
+  lcd.setCursor(3, 0);
+  lcd.print("-HUMIDITY-");
+  lcd.setCursor(5, 1);
+  lcd.print(humidity, 2);
   lcd.print("%");
+  delay(2000);
+
+  // Display Temperature for 20 seconds
+  lcd.clear();
+  lcd.setCursor(1, 0);
+  lcd.print("-TEMPERATURE-");
+  lcd.setCursor(5, 1);
+  lcd.print(temperature, 1);
+  lcd.print("°C");
+  delay(2000);
 }
 
 // CODE THAT RUNS REPEATEDLY EACH CYCLE
@@ -143,7 +161,4 @@ void loop() {
       displayData();
     }
   }
-
-  // Wait 60 Seconds Before Next Reading
-  delay(60000);
 }
