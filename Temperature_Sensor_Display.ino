@@ -1,9 +1,10 @@
 #include <DHT.h>
 #include <ESP8266WiFi.h>
-#include <LiquidCrystal_I2C.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
+
+#include "Waveshare_LCD1602.h"
 
 // WiFi Credentials
 #define WIFI_SSID "TelstraDBFC51"
@@ -19,7 +20,8 @@ WiFiUDP udp;
 NTPClient timeClient(udp, ntpServer, utcOffsetInSeconds);
 
 // LCD Configuration
-LiquidCrystal_I2C lcd(0x27, 16, 2);  // SDA: D2 (GPIO 4) & SCL: D1 (GPIO 5)
+Waveshare_LCD1602 lcd(16, 2);  // 16 Characters & 2 Lines
+int r, g, b, t = 0;            // SDA: D2 (GPIO 4) & SCL: D1 (GPIO 5)
 
 // DHT Sensor Configuration
 #define DHTTYPE DHT22
@@ -30,15 +32,22 @@ DHT dht(DHTPIN, DHTTYPE);
 // Variables to Store Sensor Data
 float temperature = 0.0;
 float humidity = 0.0;
+char temp[10];
+char humd[10];
+
+// Custom Charcter for Degrees Symbol
+uint8_t degreeSymbol[8] = {0b00110, 0b01001, 0b01001, 0b00110,
+                           0b00000, 0b00000, 0b00000, 0b00000};
 
 // CODE THAT RUNS ONCE AT START-UP
 void setup() {
   // Wait 5 seconds Before Doing Anything Else
   delay(5000);
 
-  // Start the Device
+  // Start the lCD Display and Serial
   Serial.begin(115200);
   lcd.init();
+  lcd.customSymbol(0, degreeSymbol);  // Create and store the degree symbol
 
   // Initialise DHT Sensor
   pinMode(DHT_POWER, OUTPUT);     // Enable Pin Writing
@@ -64,9 +73,6 @@ void setup() {
 
   // Synchronise with NTP server
   timeClient.update();
-
-  // Turn on the LCD Backlight
-  lcd.backlight();
 }
 
 // CODE TO TURN OFF DEVICES
@@ -75,18 +81,18 @@ void sleepMode() {
   Serial.println("Entering Sleep Mode...");
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Sleeping...");
+  lcd.send_string("Sleeping...");
   delay(5000);
 
   // Turn off Temp Sensor
   digitalWrite(DHT_POWER, LOW);
 
-  // Turn off the LCD Display
-  lcd.off();
-
   // Disconnect from Wi-Fi to Save Power
   WiFi.disconnect();
   WiFi.mode(WIFI_OFF);
+
+  // Turn Off Display
+  lcd.noDisplay();
 
   // Push Control Chip into Sleep
   delay(3600 * 8000);  // Sleep for 8 Hours
@@ -94,9 +100,6 @@ void sleepMode() {
   // Wake Chip Up
   Serial.println("Exiting Sleep Mode...");
   setup();
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Waking Up...");
 }
 
 // CODE TO DISPLAY DATA
@@ -105,36 +108,27 @@ void displayData() {
   Serial.print("Temperature: ");
   Serial.print(temperature, 1);
   Serial.print("°C, Humidity: ");
-  Serial.print(humidity, 2);
+  Serial.print(humidity, 1);
   Serial.println("%");
 
-  // Display on LCD
-  // Display Temperature for 20 seconds
+  // Display Temperature for 30 seconds
   lcd.clear();
-  lcd.setCursor(1, 0);
-  lcd.print("-TEMPERATURE-");
+  lcd.setCursor(2, 0);
+  lcd.send_string("TEMPERATURE:");
   lcd.setCursor(5, 1);
-  lcd.print(temperature, 1);
-  lcd.print("°C");
-  delay(20000);
+  lcd.send_string(temp);
+  lcd.write_char(0);  // Add the degree symbol
+  lcd.send_string("C");
+  delay(30000);
 
-  // Display Humidity for 20 seconds
+  // Display Humidity for 30 seconds
   lcd.clear();
   lcd.setCursor(3, 0);
-  lcd.print("-HUMIDITY-");
+  lcd.send_string("HUMIDITY:");
   lcd.setCursor(5, 1);
-  lcd.print(humidity, 2);
-  lcd.print("%");
-  delay(20000);
-
-  // Display Temperature for 20 seconds
-  lcd.clear();
-  lcd.setCursor(1, 0);
-  lcd.print("-TEMPERATURE-");
-  lcd.setCursor(5, 1);
-  lcd.print(temperature, 1);
-  lcd.print("°C");
-  delay(20000);
+  lcd.send_string(humd);
+  lcd.send_string("%");
+  delay(30000);
 }
 
 // CODE THAT RUNS REPEATEDLY EACH CYCLE
@@ -154,11 +148,15 @@ void loop() {
     temperature = dht.readTemperature();
     humidity = dht.readHumidity();
 
+    // Convert to a String
+    dtostrf(temperature, 0, 1, temp);
+    dtostrf(humidity, 0, 1, humd);
+
     // If Data is Successfully Obtained, Print to Serial and LCD
     if (isnan(temperature) || isnan(humidity)) {
       // Send Error Messages
       lcd.clear();
-      lcd.print("Sensor Error!");
+      lcd.send_string("Sensor Error!");
       Serial.println("Failed to read from DHT sensor!");
     } else {
       // Display the Data from the Sensor
