@@ -22,6 +22,7 @@ NTPClient timeClient(udp, ntpServer, utcOffsetInSeconds);
 // LCD Configuration
 Waveshare_LCD1602 lcd(16, 2);  // 16 Characters & 2 Lines
 int r, g, b, t = 0;            // SDA: D2 (GPIO 4) & SCL: D1 (GPIO 5)
+#define LCD_POWER D0           // GPIO pin to control LCD Power
 
 // DHT Sensor Configuration
 #define DHTTYPE DHT22
@@ -43,16 +44,18 @@ uint8_t degreeSymbol[8] = {0b00110, 0b01001, 0b01001, 0b00110,
 void setup() {
   // Wait 5 seconds Before Doing Anything Else
   delay(5000);
+  Serial.begin(115200);
 
   // Start the lCD Display and Serial
-  Serial.begin(115200);
+  pinMode(LCD_POWER, OUTPUT);     // Enable Pin Writing
+  digitalWrite(LCD_POWER, HIGH);  // Turn Power Output On
   lcd.init();
   lcd.customSymbol(0, degreeSymbol);  // Create and store the degree symbol
 
   // Initialise DHT Sensor
   pinMode(DHT_POWER, OUTPUT);     // Enable Pin Writing
   digitalWrite(DHT_POWER, HIGH);  // Turn Power Output On
-  dht.begin();                    // Start Sensor
+  dht.begin();
 
   // Connect to Wi-Fi
   Serial.print("Connecting to WiFi");
@@ -84,15 +87,15 @@ void sleepMode() {
   lcd.send_string("Sleeping...");
   delay(5000);
 
-  // Turn off Temp Sensor
-  digitalWrite(DHT_POWER, LOW);
-
   // Disconnect from Wi-Fi to Save Power
   WiFi.disconnect();
   WiFi.mode(WIFI_OFF);
 
+  // Turn Off Temp Sensor
+  digitalWrite(DHT_POWER, LOW);
+
   // Turn Off Display
-  lcd.noDisplay();
+  digitalWrite(LCD_POWER, LOW);
 
   // Push Control Chip into Sleep
   delay(3600 * 8000);  // Sleep for 8 Hours
