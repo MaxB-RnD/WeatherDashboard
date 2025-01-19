@@ -22,12 +22,12 @@ NTPClient timeClient(udp, ntpServer, utcOffsetInSeconds);
 // LCD Configuration
 Waveshare_LCD1602 lcd(16, 2);  // 16 Characters & 2 Lines
 int r, g, b, t = 0;            // SDA: D2 (GPIO 4) & SCL: D1 (GPIO 5)
-#define LCD_POWER D0           // GPIO pin to control LCD Power
+#define LCD_POWER D8           // GPIO pin to control LCD Power
 
 // DHT Sensor Configuration
 #define DHTTYPE DHT22
-#define DHTPIN D7     // GPIO pin to control DHT Data
-#define DHT_POWER D8  // GPIO pin to control DHT Power
+#define DHTPIN D5     // GPIO pin to control DHT Data
+#define DHT_POWER D7  // GPIO pin to control DHT Power
 DHT dht(DHTPIN, DHTTYPE);
 
 // Variables to Store Sensor Data
