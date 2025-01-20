@@ -19,6 +19,14 @@ const long utcOffsetInSeconds =
 WiFiUDP udp;
 NTPClient timeClient(udp, ntpServer, utcOffsetInSeconds);
 
+// RTC Memory to Track Sleep Cycles
+struct RTCMemory {
+  int wakeUpCount;
+};
+
+// Instance of RTC Variable
+RTCMemory rtcMem;
+
 // LCD Configuration
 Waveshare_LCD1602 lcd(16, 2);  // 16 Characters & 2 Lines
 int r, g, b, t = 0;            // SDA: D2 (GPIO 4) & SCL: D1 (GPIO 5)
@@ -33,6 +41,7 @@ DHT dht(DHTPIN, DHTTYPE);
 // Variables to Store Sensor Data
 float temperature = 0.0;
 float humidity = 0.0;
+int count = 0;
 char temp[10];
 char humd[10];
 
@@ -42,40 +51,84 @@ uint8_t degreeSymbol[8] = {0b00110, 0b01001, 0b01001, 0b00110,
 
 // CODE THAT RUNS ONCE AT START-UP
 void setup() {
-  // Wait 5 seconds Before Doing Anything Else
-  delay(5000);
+  // Wait 20 seconds Before Doing Anything Else
   Serial.begin(115200);
+  delay(10000);
 
-  // Start the lCD Display and Serial
-  pinMode(LCD_POWER, OUTPUT);     // Enable Pin Writing
-  digitalWrite(LCD_POWER, HIGH);  // Turn Power Output On
-  lcd.init();
-  lcd.customSymbol(0, degreeSymbol);  // Create and store the degree symbol
+  // Force a Serial Flush
+  Serial.println("Initializing...");
+  Serial.flush();
 
-  // Initialise DHT Sensor
-  pinMode(DHT_POWER, OUTPUT);     // Enable Pin Writing
-  digitalWrite(DHT_POWER, HIGH);  // Turn Power Output On
-  dht.begin();
-
-  // Connect to Wi-Fi
-  Serial.print("Connecting to WiFi");
-  WiFi.mode(WIFI_STA);                   // Set WiFi Mode
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);  // Join WiFi Network
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print(".");
+  // Read RTC Memory
+  if (!ESP.rtcUserMemoryRead(0, (uint32_t*)&rtcMem, sizeof(rtcMem))) {
+    Serial.println(
+        "Failed to read from RTC memory. Initializing wake-up count...");
   }
 
-  Serial.println("\nConnected to WiFi");
-  Serial.print("IP Address: ");
-  Serial.println(WiFi.localIP());
+  // Check if it is a Cold Boot
+  if (ESP.getResetInfo() == "External System") {
+    rtcMem.wakeUpCount = 0;
+  }
 
-  // Initialize the NTP Client
-  timeClient.begin();
+  // Check the Reset Reason
+  if (rtcMem.wakeUpCount >= 3) {
+    // Fresh Start Detected
+    rtcMem.wakeUpCount = 1;
+  } else {
+    // Increment Wake-up Counter for Deep Sleep Wake-Ups
+    rtcMem.wakeUpCount++;
+  }
 
-  // Synchronise with NTP server
-  timeClient.update();
+  // Write the Updated Wake-up Count Back to RTC memory
+  if (!ESP.rtcUserMemoryWrite(0, (uint32_t*)&rtcMem, sizeof(rtcMem))) {
+    Serial.println("Failed to write to RTC memory.");
+  }
+
+  // Sleep Logic
+  if (rtcMem.wakeUpCount == 2) {
+    Serial.println("Sleeping for 3.5 hours...");
+    ESP.deepSleep(60 * 1000000);
+    // ESP.deepSleep(ESP.deepSleepMax()); // Approximently 3.5 hours
+  } else if (rtcMem.wakeUpCount == 3) {
+    Serial.println("Sleeping for 1 hour...");
+    uint64_t sleepTime = 60 * 60 * 1000000;
+    ESP.deepSleep(60 * 1000000);
+    // ESP.deepSleep(sleepTime); // Approximently 1 hour
+  } else {
+    Serial.println("Completed 8-hour sleep cycle!");
+    count = 0;
+
+    // Start the LCD Display & Serial
+    // pinMode(LCD_POWER, OUTPUT);        // Enable Pin Writing
+    // digitalWrite(LCD_POWER, HIGH);   // Turn Power Output On
+    // lcd.init();
+    // lcd.customSymbol(0, degreeSymbol); // Create and Store the Degree Symbol
+
+    // Initialise DHT Sensor
+    pinMode(DHT_POWER, OUTPUT);     // Enable Pin Writing
+    digitalWrite(DHT_POWER, HIGH);  // Turn Power Output On
+    dht.begin();
+
+    // Connect to Wi-Fi
+    Serial.print("Connecting to WiFi");
+    WiFi.mode(WIFI_STA);                   // Set WiFi Mode
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);  // Join WiFi Network
+
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(1000);
+      Serial.print(".");
+    }
+
+    Serial.println("\nConnected to WiFi");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+
+    // Initialise the NTP Client
+    timeClient.begin();
+
+    // Synchronise with NTP server
+    timeClient.update();
+  }
 }
 
 // CODE TO TURN OFF DEVICES
@@ -98,11 +151,9 @@ void sleepMode() {
   digitalWrite(LCD_POWER, LOW);
 
   // Push Control Chip into Sleep
-  delay(3600 * 8000);  // Sleep for 8 Hours
-
-  // Wake Chip Up
-  Serial.println("Exiting Sleep Mode...");
-  setup();
+  delay(5000);
+  ESP.deepSleep(60 * 1000000);
+  // ESP.deepSleep(ESP.deepSleepMax()); // Approximently 3.5 hours
 }
 
 // CODE TO DISPLAY DATA
@@ -143,7 +194,7 @@ void loop() {
   int currentHour = timeClient.getHours();
 
   // Check if it is Time to Sleep
-  if (currentHour < 8) {  // Sleep at 12 AM for 8 Hours
+  if (count == 2) {  // Sleep at 11 PM for 8 Hours if(currentHour == 23
     // Put the Device to Sleep
     sleepMode();
   } else {
@@ -166,4 +217,5 @@ void loop() {
       displayData();
     }
   }
+  count++;
 }
