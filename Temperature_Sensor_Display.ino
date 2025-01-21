@@ -41,7 +41,6 @@ DHT dht(DHTPIN, DHTTYPE);
 // Variables to Store Sensor Data
 float temperature = 0.0;
 float humidity = 0.0;
-int count = 0;
 char temp[10];
 char humd[10];
 
@@ -87,22 +86,19 @@ void setup() {
   // Sleep Logic
   if (rtcMem.wakeUpCount == 2) {
     Serial.println("Sleeping for 3.5 hours...");
-    ESP.deepSleep(60 * 1000000);
-    // ESP.deepSleep(ESP.deepSleepMax()); // Approximently 3.5 hours
+    ESP.deepSleep(ESP.deepSleepMax());  // Approximently 3.5 hours
   } else if (rtcMem.wakeUpCount == 3) {
     Serial.println("Sleeping for 1 hour...");
     uint64_t sleepTime = 60 * 60 * 1000000;
-    ESP.deepSleep(60 * 1000000);
-    // ESP.deepSleep(sleepTime); // Approximently 1 hour
+    ESP.deepSleep(sleepTime);  // Approximently 1 hour
   } else {
     Serial.println("Completed 8-hour sleep cycle!");
-    count = 0;
 
     // Start the LCD Display & Serial
-    // pinMode(LCD_POWER, OUTPUT);        // Enable Pin Writing
-    // digitalWrite(LCD_POWER, HIGH);   // Turn Power Output On
-    // lcd.init();
-    // lcd.customSymbol(0, degreeSymbol); // Create and Store the Degree Symbol
+    pinMode(LCD_POWER, OUTPUT);     // Enable Pin Writing
+    digitalWrite(LCD_POWER, HIGH);  // Turn Power Output On
+    lcd.init();
+    lcd.customSymbol(0, degreeSymbol);  // Create and Store the Degree Symbol
 
     // Initialise DHT Sensor
     pinMode(DHT_POWER, OUTPUT);     // Enable Pin Writing
@@ -152,8 +148,7 @@ void sleepMode() {
 
   // Push Control Chip into Sleep
   delay(5000);
-  ESP.deepSleep(60 * 1000000);
-  // ESP.deepSleep(ESP.deepSleepMax()); // Approximently 3.5 hours
+  ESP.deepSleep(ESP.deepSleepMax());  // Approximently 3.5 hours
 }
 
 // CODE TO DISPLAY DATA
@@ -194,7 +189,7 @@ void loop() {
   int currentHour = timeClient.getHours();
 
   // Check if it is Time to Sleep
-  if (count == 2) {  // Sleep at 11 PM for 8 Hours if(currentHour == 23
+  if (currentHour == 23) {  // Sleep at 11 PM for 8 Hours
     // Put the Device to Sleep
     sleepMode();
   } else {
@@ -217,5 +212,4 @@ void loop() {
       displayData();
     }
   }
-  count++;
 }
