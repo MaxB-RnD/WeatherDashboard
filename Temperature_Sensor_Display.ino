@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <DHT.h>
 #include <ESP8266WiFi.h>
 #include <NTPClient.h>
@@ -54,6 +55,12 @@ void setup() {
   Serial.begin(115200);
   delay(10000);
 
+  // Enable the Watchdog Timer with a Timeout of 1 Second (1000 ms)
+  ESP.wdtEnable(1000);  // Timeout in milliseconds
+
+  // Feed the Watchdog so it doesn't Reset the System Immediately
+  ESP.wdtFeed();
+
   // Force a Serial Flush
   Serial.println("Initializing...");
   Serial.flush();
@@ -86,10 +93,11 @@ void setup() {
   // Sleep Logic
   if (rtcMem.wakeUpCount == 2) {
     Serial.println("Sleeping for 3.5 hours...");
-    ESP.deepSleep(ESP.deepSleepMax());  // Approximently 3.5 hours
+    ESP.deepSleep(ESP.deepSleepMax(),
+                  WAKE_RF_DISABLED);  // Approximently 3.5 hours
   } else if (rtcMem.wakeUpCount == 3) {
     Serial.println("Sleeping for 1 hour...");
-    uint64_t sleepTime = 60 * 60 * 1000000;
+    uint64_t sleepTime = 60UL * 60UL * 1000000UL;
     ESP.deepSleep(sleepTime);  // Approximently 1 hour
   } else {
     Serial.println("Completed 8-hour sleep cycle!");
@@ -146,9 +154,13 @@ void sleepMode() {
   // Turn Off Display
   digitalWrite(LCD_POWER, LOW);
 
+  // Feed the watchdog timer to avoid issues
+  ESP.wdtFeed();
+
   // Push Control Chip into Sleep
-  delay(5000);
-  ESP.deepSleep(ESP.deepSleepMax());  // Approximently 3.5 hours
+  Serial.println("Sleeping for 3.5 hours...");
+  ESP.deepSleep(ESP.deepSleepMax(),
+                WAKE_RF_DISABLED);  // Approximently 3.5 hours
 }
 
 // CODE TO DISPLAY DATA
