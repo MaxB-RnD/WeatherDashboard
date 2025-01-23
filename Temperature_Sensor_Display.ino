@@ -93,12 +93,9 @@ void setup() {
   // Sleep Logic
   if (rtcMem.wakeUpCount == 2) {
     Serial.println("Sleeping for 3.5 hours...");
-    ESP.wdtFeed();  // Feed the watchdog timer to avoid issues
-    ESP.deepSleep(ESP.deepSleepMax(),
-                  WAKE_RF_DISABLED);  // Approximently 3.5 hours
+    ESP.deepSleep(ESP.deepSleepMax());  // Approximently 3.5 hours
   } else if (rtcMem.wakeUpCount == 3) {
     Serial.println("Sleeping for 1 hour...");
-    ESP.wdtFeed();  // Feed the watchdog timer to avoid issues
     uint64_t sleepTime = 60UL * 60UL * 1000000UL;
     ESP.deepSleep(sleepTime);  // Approximently 1 hour
   } else {
@@ -161,8 +158,7 @@ void sleepMode() {
 
   // Push Control Chip into Sleep
   Serial.println("Sleeping for 3.5 hours...");
-  ESP.deepSleep(ESP.deepSleepMax(),
-                WAKE_RF_DISABLED);  // Approximently 3.5 hours
+  ESP.deepSleep(ESP.deepSleepMax());  // Approximently 3.5 hours
 }
 
 // CODE TO DISPLAY DATA
