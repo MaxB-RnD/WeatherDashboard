@@ -23,7 +23,7 @@ NTPClient timeClient(udp, ntpServer, utcOffsetInSeconds);
 // RTC Memory to Track Sleep Cycles
 struct RTCMemory {
   int wakeUpCount;
-};
+} __attribute__((aligned(4)));  // Force 4-byte alignment
 
 // Instance of RTC Variable
 RTCMemory rtcMem;
@@ -69,6 +69,7 @@ void setup() {
   if (!ESP.rtcUserMemoryRead(0, (uint32_t*)&rtcMem, sizeof(rtcMem))) {
     Serial.println(
         "Failed to read from RTC memory. Initializing wake-up count...");
+    rtcMem.wakeUpCount = 0;
   }
 
   // Check if it is a Cold Boot
@@ -77,17 +78,22 @@ void setup() {
   }
 
   // Check the Reset Reason
-  if (rtcMem.wakeUpCount >= 3) {
+  if (rtcMem.wakeUpCount >= 3 || rtcMem.wakeUpCount == 0) {
     // Fresh Start Detected
     rtcMem.wakeUpCount = 1;
   } else {
     // Increment Wake-up Counter for Deep Sleep Wake-Ups
     rtcMem.wakeUpCount++;
+    ESP.wdtDisable();  // Disable the Watchdog Timer to Avoid Issues
   }
+
+  // Clear RTC for Clean Memory Write
+  clearRTC();
 
   // Write the Updated Wake-up Count Back to RTC memory
   if (!ESP.rtcUserMemoryWrite(0, (uint32_t*)&rtcMem, sizeof(rtcMem))) {
     Serial.println("Failed to write to RTC memory.");
+    rtcMem.wakeUpCount = 0;
   }
 
   // Sleep Logic
@@ -134,6 +140,12 @@ void setup() {
   }
 }
 
+// CODE TO CLEAR RTC MEMORY
+void clearRTC() {
+  uint32_t clearData[128] = {0};
+  ESP.rtcUserMemoryWrite(0, clearData, sizeof(clearData));
+}
+
 // CODE TO TURN OFF DEVICES
 void sleepMode() {
   // Notify Me of Sleep Mode
@@ -153,8 +165,8 @@ void sleepMode() {
   // Turn Off Display
   digitalWrite(LCD_POWER, LOW);
 
-  // Feed the watchdog timer to avoid issues
-  ESP.wdtFeed();
+  // Disable the Watchdog Timer to Avoid Issues
+  ESP.wdtDisable();
 
   // Push Control Chip into Sleep
   Serial.println("Sleeping for 3.5 hours...");
