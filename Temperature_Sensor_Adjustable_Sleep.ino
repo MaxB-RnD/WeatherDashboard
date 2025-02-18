@@ -212,12 +212,12 @@ void loop() {
   int dayOfWeek = timeClient.getDay();  // 0 (Sunday) - 6 (Saturday)
 
   // Check if it is Time to Sleep
-  if ((currentHour == 21 &&
-       (dayOfWeek == 0 || dayOfWeek == 1)) ||  // 9 PM on Sunday & Monday
+  if ((currentHour == 21 && dayOfWeek == 0) ||  // 9 PM on Sunday
       (currentHour == 22 &&
-       (dayOfWeek == 2 || dayOfWeek == 4)) ||  // 10 PM on Tuesday & Thursday
-      (currentHour == 23 && (dayOfWeek == 3 || dayOfWeek == 5 ||
-                             dayOfWeek == 6))) {  // 11 PM on Wed, Fri, Sat
+       (dayOfWeek == 1 || dayOfWeek == 2)) ||  // 10 PM on Monday & Tuesday
+      (currentHour == 23 &&
+       (dayOfWeek == 3 || dayOfWeek == 4 || dayOfWeek == 5 ||
+        dayOfWeek == 6))) {  // 11 PM on Wed, Thurs, Fri, Sat
     // Put the Device to Sleep
     sleepMode();
   } else {
