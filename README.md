@@ -3,7 +3,9 @@ WeatherDashboard is a project designed to display temperature data collected fro
 
 
 ## Project Overview
-This project aims to collect real-time temperature data from a sensor and present it in a user-friendly format. The data will eventually be displayed on a local interface, not a webpage, for direct access on your desk.
+- This project collects real-time temperature data from a sensor and presents it in a user-friendly format, both on a local network and a local display.
+- The webpage *(found in the subsequent folder)* will display the temperature, humidity, and moving graphs for the data collected over the past hour.
+- The provided Arduino code is ready to be uploaded onto an Arduino board and will display the temperature and humidity on a compatible LCD display.
 
 
 ## Features
