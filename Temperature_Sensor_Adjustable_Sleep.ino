@@ -14,7 +14,7 @@
 // NTP Configuration
 const char* ntpServer = "pool.ntp.org";
 const long utcOffsetInSeconds =
-    (10.5 * 3600);  // Adjust for timezone (e.g., UTC + 10.5)
+    (9.5 * 3600);  // Adjust for timezone (e.g., UTC + 9.5)
 
 // Create an NTPClient Instance
 WiFiUDP udp;
